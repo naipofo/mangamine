@@ -5,6 +5,8 @@
 
 	let worker;
 
+	let fullImage: string | null = null;
+
 	onMount(async () => {
 		worker = await Tesseract.createWorker({
 			logger: (m) => console.log(m)
@@ -22,8 +24,46 @@
 				a = text.replaceAll(' ', '').replaceAll('\n', `<br>`);
 			});
 	});
+	onMount(() => {
+		document.addEventListener('paste', (e) => {
+			const items = e.clipboardData?.files;
+			if (items) {
+				Array.from(items ?? []).forEach((e) => {
+					var reader = new FileReader();
+					reader.onload = function (event) {
+						fullImage = event?.target?.result as string;
+					};
+					reader.readAsDataURL(e);
+				});
+			}
+		});
+	});
 </script>
 
-<h1>Welcome to SvelteKit</h1>
-{@html a}
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<h3>MangaMine</h3>
+<div id="input" class="panel">
+	{#if fullImage}
+		<img src={fullImage} alt="" id="full-img" />
+	{:else}
+		<p>paste the page to load</p>
+	{/if}
+</div>
+<div id="output" class="panel">
+	{@html a}
+</div>
+
+<style>
+	.panel {
+		margin: 1rem;
+		padding: 1rem;
+		border: 5px dotted gray;
+		border-radius: 2rem;
+	}
+	#output {
+		font-size: 2rem;
+	}
+
+	#full-img {
+		width: 100%;
+	}
+</style>
