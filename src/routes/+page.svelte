@@ -1,6 +1,8 @@
 <script lang="ts">
 	import Tesseract, { OEM, PSM } from 'tesseract.js';
 	import { onMount } from 'svelte';
+	import CropImage from '$lib/CropImage.svelte';
+
 	let a = 'asd';
 
 	let worker;
@@ -43,7 +45,7 @@
 <h3>MangaMine</h3>
 <div id="input" class="panel">
 	{#if fullImage}
-		<img src={fullImage} alt="" id="full-img" />
+		<CropImage src={fullImage} />
 	{:else}
 		<p>paste the page to load</p>
 	{/if}
@@ -61,9 +63,5 @@
 	}
 	#output {
 		font-size: 2rem;
-	}
-
-	#full-img {
-		width: 100%;
 	}
 </style>
