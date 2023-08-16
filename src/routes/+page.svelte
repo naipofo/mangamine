@@ -2,12 +2,15 @@
 	import Tesseract, { OEM, PSM } from 'tesseract.js';
 	import { onMount } from 'svelte';
 	import CropImage from '$lib/CropImage.svelte';
+	import type { Coord, CropMessage } from '$lib/types';
+	import { crop } from '$lib/crop';
 
 	let a = 'asd';
 
-	let worker;
+	let worker: Tesseract.Worker;
 
 	let fullImage: string | null = null;
+	let croppedImage: string | null = null;
 
 	onMount(async () => {
 		worker = await Tesseract.createWorker({
@@ -19,12 +22,6 @@
 			tessedit_pageseg_mode: PSM.SINGLE_BLOCK_VERT_TEXT,
 			tessedit_ocr_engine_mode: OEM.TESSERACT_LSTM_COMBINED
 		});
-		worker
-			.recognize('https://i.imgur.com/zTw5D1h.png', { rotateAuto: true })
-			.then(({ data: { text } }) => {
-				console.log(text);
-				a = text.replaceAll(' ', '').replaceAll('\n', `<br>`);
-			});
 	});
 	onMount(() => {
 		document.addEventListener('paste', (e) => {
@@ -40,16 +37,31 @@
 			}
 		});
 	});
+	async function cropped(params: CustomEvent<CropMessage>) {
+		croppedImage = await crop(fullImage!, params.detail);
+	}
+	async function croppedText(params: CustomEvent<CropMessage>) {
+		const textImage = await crop(croppedImage!, params.detail);
+		worker.recognize(textImage, { rotateAuto: false }).then(({ data: { text } }) => {
+			console.log(text);
+			a = text.replaceAll(' ', '').replaceAll('\n', `<br>`);
+		});
+	}
 </script>
 
 <h3>MangaMine</h3>
 <div id="input" class="panel">
 	{#if fullImage}
-		<CropImage src={fullImage} />
+		<CropImage src={fullImage} on:cropped={cropped} />
 	{:else}
 		<p>paste the page to load</p>
 	{/if}
 </div>
+{#if croppedImage}
+	<div id="text-select">
+		<CropImage src={croppedImage} on:cropped={croppedText} />
+	</div>
+{/if}
 <div id="output" class="panel">
 	{@html a}
 </div>

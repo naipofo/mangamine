@@ -1,9 +1,19 @@
 <script lang="ts">
-	export let src: string;
-	type coord = [number, number];
+	import { createEventDispatcher } from 'svelte';
+	import type { Coord } from './types';
 
-	let start: coord = [0, 0];
-	let end: coord = [0, 0];
+	export let src: string;
+
+	let start: Coord = [0, 0];
+	let end: Coord = [0, 0];
+
+	function getRelative(c: Coord): Coord {
+		return bb ? [c[0] / (bb?.width ?? 1), c[1] / (bb?.height ?? 1)] : [0, 0];
+	}
+	$: startRelative = getRelative(start);
+	$: endRelative = getRelative(end);
+
+	const dispatch = createEventDispatcher();
 
 	let cont: HTMLDivElement;
 	let bb: DOMRect | null;
@@ -29,7 +39,13 @@
 		selected = true;
 		window.removeEventListener('mousemove', move);
 		window.removeEventListener('mouseup', up);
+		dispatch('cropped', {
+			start: startRelative,
+			end: endRelative
+		});
 	}
+
+	let r = Math.random();
 </script>
 
 <div bind:this={cont}>
@@ -38,17 +54,17 @@
 	<svg viewBox="0 0 1 1" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
 		{#if selecting || selected}
 			<defs>
-				<mask id="selection">
+				<mask id="selection{r}">
 					<rect width="1" height="1" fill="white" />
 					<rect
-						x={start[0] / (bb?.width ?? 1)}
-						y={start[1] / (bb?.height ?? 1)}
-						width={(end[0] - start[0]) / (bb?.width ?? 1)}
-						height={(end[1] - start[1]) / (bb?.height ?? 1)}
+						x={startRelative[0]}
+						y={startRelative[1]}
+						width={endRelative[0] - startRelative[0]}
+						height={endRelative[1] - startRelative[1]}
 					/>
 				</mask>
 			</defs>
-			<rect width="1" height="1" mask="url(#selection)" fill="#0008" />
+			<rect width="1" height="1" mask="url(#selection{r})" fill="#0008" />
 		{/if}
 	</svg>
 </div>
