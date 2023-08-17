@@ -21,6 +21,7 @@
 	let selected = false;
 
 	function down(event: MouseEvent) {
+		if (event.buttons !== 1) return;
 		bb = cont.getBoundingClientRect();
 		console.log(event.pageY);
 
@@ -34,6 +35,7 @@
 		if (selecting) end = [end[0] + event.movementX, end[1] + event.movementY];
 	}
 	function up(event: MouseEvent) {
+		if (!selecting) return;
 		move(event);
 		selecting = false;
 		selected = true;
